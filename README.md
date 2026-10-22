@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
@@ -56,3 +57,30 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+=======
+# MyTradeX
+
+MyTradeX website development project.
+
+## Planned Features
+- User registration and login
+- Investment packages and terms
+- Manual KYC review by admin
+- Binance Pay merchant checkout
+- Verified payment processing
+- Investment and accounting ledger
+- Withdrawal approval workflow
+- Referral management
+- Admin dashboard
+
+## Development
+- Laravel / PHP
+- MySQL
+- GitHub for version control
+- Simulated payments during initial testing
+
+## Security
+- Never store API secrets in source code.
+- Withdrawals require approved KYC.
+- Simulated payments must never activate real-money investments.
+>>>>>>> 9e256e24795e6108fc8d8badfdd7e41401a743a9

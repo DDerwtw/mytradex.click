@@ -8,7 +8,9 @@ use App\Models\LedgerTransaction;
 use App\Models\ReferralCommission;
 use App\Models\ReferralWithdrawalRequest;
 use App\Models\User;
+use App\Models\LedgerAccount;
 use App\Services\AdminMessages\CreateAdminUserMessage;
+use App\Services\Ledger\LedgerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -169,5 +171,66 @@ class AdminController extends Controller
         });
 
         return redirect()->route('admin.kyc.show', $submission)->with('status', 'The verification decision was recorded.');
+    }
+
+    // ==========================================
+    // MANUAL BALANCE ADJUSTMENT (NEW FEATURE)
+    // ==========================================
+    public function adjustBalance(Request $request, User $user, LedgerService $ledger): RedirectResponse
+    {
+        $validated = $request->validate([
+            'wallet_type' => ['required', 'in:referral,maturity,bonus'],
+            'action' => ['required', 'in:add,subtract'],
+            'amount' => ['required', 'numeric', 'min:0.00000001'],
+            'reason' => ['required', 'string', 'max:255'],
+        ]);
+
+        $amount = (float) $validated['amount'];
+        $isAdd = $validated['action'] === 'add';
+        $direction = $isAdd ? 'credit' : 'debit';
+        
+        // Ledger Account Key එක තීරණය කිරීම
+        $accountKey = match($validated['wallet_type']) {
+            'referral' => 'user:'.$user->id.':referral:USDT', 
+            'maturity', 'bonus' => 'user:'.$user->id.':investment:USDT',
+        };
+
+        $userAccount = LedgerAccount::firstOrCreate(
+            ['account_key' => $accountKey],
+            ['user_id' => $user->id, 'currency' => 'USDT', 'kind' => 'payable']
+        );
+
+        $platformAccount = LedgerAccount::firstOrCreate(
+            ['account_key' => 'platform:admin-adjustments:USDT'],
+            ['user_id' => null, 'currency' => 'USDT', 'kind' => 'income']
+        );
+
+        DB::transaction(function () use ($ledger, $userAccount, $platformAccount, $amount, $direction, $validated): void {
+            $entries = $direction === 'credit' ? [
+                ['account_id' => $platformAccount->id, 'direction' => 'debit', 'amount' => (string) $amount],
+                ['account_id' => $userAccount->id, 'direction' => 'credit', 'amount' => (string) $amount],
+            ] : [
+                ['account_id' => $userAccount->id, 'direction' => 'debit', 'amount' => (string) $amount],
+                ['account_id' => $platformAccount->id, 'direction' => 'credit', 'amount' => (string) $amount],
+            ];
+
+            $description = $validated['wallet_type'] === 'bonus' 
+                ? 'Admin Bonus: ' . $validated['reason'] 
+                : 'Manual Admin Adjustment: ' . $validated['reason'];
+
+            $ledger->post(
+                'admin-adjustment:'.uniqid(),
+                'USDT',
+                $description,
+                $entries
+            );
+
+            // මෙන්න මේ කොටසයි අලුතින් එකතු කළේ (Balance එක Update කරන්න)
+            $credits = $userAccount->entries()->where('direction', 'credit')->sum('amount');
+            $debits = $userAccount->entries()->where('direction', 'debit')->sum('amount');
+            $userAccount->update(['balance' => $credits - $debits]);
+        });
+
+        return back()->with('status', 'Balance adjusted successfully for ' . $user->name);
     }
 }

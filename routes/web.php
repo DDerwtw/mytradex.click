@@ -56,6 +56,9 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/investments/{investment}/deposit-claims', [InvestmentController::class, 'requestDeposit'])->middleware('throttle:5,10')->name('investments.deposits.store');
         Route::post('/investments/{investment}/withdrawal-requests', [InvestmentController::class, 'requestWithdrawal'])->middleware('throttle:5,10')->name('investments.withdrawals.store');
         Route::post('/messages/{message}/read', [AccountMessageController::class, 'markRead'])->middleware('throttle:30,1')->name('messages.read');
+        
+        // ⬇️ මෙන්න මේ පේළිය මම එකතු කළා (Wallets Page)
+        Route::get('/wallets', [AuthController::class, 'wallets'])->name('wallets');
     });
 
     Route::middleware(['verified', 'account.active', 'admin'])->prefix('admin')->name('admin.')->group(function (): void {
@@ -71,6 +74,9 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/deposits/{claim}/review', [InvestmentController::class, 'reviewDeposit'])->middleware('throttle:20,1')->name('deposits.review');
         Route::post('/withdrawals/{withdrawal}/review', [InvestmentController::class, 'reviewWithdrawal'])->middleware('throttle:20,1')->name('withdrawals.review');
         Route::get('/referrals', [AdminController::class, 'referralIndex'])->name('referrals.index');
+        
+        Route::post('/users/{user}/adjust-balance', [AdminController::class, 'adjustBalance'])->middleware('throttle:20,1')->name('users.adjust-balance');
+        
         Route::post('/referrals/withdrawals/{withdrawal}/review', [ReferralController::class, 'reviewWithdrawal'])->middleware('throttle:20,1')->name('referrals.withdrawals.review');
         Route::post('/referrals/withdrawals/{withdrawal}/paid', [ReferralController::class, 'markWithdrawalPaid'])->middleware('throttle:20,1')->name('referrals.withdrawals.paid');
         Route::get('/kyc', [AdminController::class, 'kycIndex'])->name('kyc.index');

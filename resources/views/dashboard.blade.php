@@ -35,7 +35,23 @@
             <article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">◉</span><span class="status-pill status-ready">Verified</span></div><h2>Email account</h2><p class="mockup-stat-value">Active</p><div class="dashboard-detail"><span>Email</span><strong>{{ auth()->user()->email }}</strong></div></article>
             <article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">◎</span><span class="status-pill status-ready">Available</span></div><h2>Referral network</h2><p class="mockup-stat-value">{{ number_format($referralCount) }}</p><div class="dashboard-detail"><span>Direct referrals</span><a class="text-link" href="{{ route('account.referrals') }}">Open →</a></div></article>
             <article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">⬡</span><span class="status-pill {{ $kycSubmission?->status === 'approved' ? 'status-ready' : '' }}">{{ $kycSubmission ? ucfirst(str_replace('_', ' ', $kycSubmission->status)) : 'Not submitted' }}</span></div><h2>KYC Verification Review</h2><p class="mockup-stat-value">{{ $kycSubmission ? ucfirst(str_replace('_', ' ', $kycSubmission->status)) : 'Not started' }}</p><div class="dashboard-detail"><span>Private document review</span><a class="text-link" href="{{ route('account.kyc') }}">View →</a></div></article>
-            <article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">◇</span><span class="status-pill">Disabled</span></div><h2>Wallet balance</h2><p class="mockup-stat-value">Not available</p><div class="dashboard-detail"><span>USDT · TRC20</span><strong>Preview only</strong></div></article>
+            
+            <!-- Wallet Balance Card (Updated with Link) -->
+            <a href="{{ route('account.wallets') }}" style="text-decoration: none; color: inherit; display: block;">
+                <article class="dashboard-card" style="transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 30px rgba(56, 189, 248, 0.15)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+                    <div class="dashboard-card-top">
+                        <span class="dashboard-icon">◇</span>
+                        <span class="status-pill" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.2);">Active</span>
+                    </div>
+                    <h2>Wallet balance</h2>
+                    <p class="mockup-stat-value">Available</p>
+                    <div class="dashboard-detail">
+                        <span>USDT · TRC20</span>
+                        <strong style="color: #38bdf8; font-weight: bold;">View Details →</strong>
+                    </div>
+                </article>
+            </a>
+
         </div>
 
         <div class="mockup-account-main">

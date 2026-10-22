@@ -43,5 +43,84 @@
             {{ $referrals->links() }}
         @endif
     </section>
+
+    <!-- Manual Balance Adjustment Section -->
+    <section class="dashboard-panel admin-recent" style="border-top: 2px solid #38bdf8; margin-bottom: 30px;">
+        <div class="dashboard-panel-heading">
+            <div>
+                <div class="eyebrow" style="color: #38bdf8;">Financial Controls</div>
+                <h2>Manual Balance Adjustment</h2>
+            </div>
+            <span class="status-pill" style="background: rgba(234, 179, 8, 0.1); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.2);">Admin Only</span>
+        </div>
+        <p class="dashboard-muted">Adjust a user's Referral or Maturity wallet balance manually. A ledger record will be created for auditing purposes.</p>
+        
+        <form method="POST" action="" id="manual-adjust-form" style="margin-top: 20px;">
+            @csrf
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: #cbd5e1; font-weight: 600;">Select User</label>
+                    <select name="user_id" id="adjust_user_id" required class="referral-search-form input" style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #fff;">
+                        <option value="">-- Search or select user --</option>
+                        @foreach(App\Models\User::limit(100)->get() as $u)
+                            <option value="{{ $u->id }}" data-url="{{ route('admin.users.adjust-balance', $u->id) }}">
+                                {{ $u->name }} ({{ $u->email }}) - ID: {{ $u->id }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: #cbd5e1; font-weight: 600;">Wallet Type</label>
+                    <select name="wallet_type" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #fff;">
+                            <option value="referral">Referral Income Wallet</option>
+                            <option value="maturity">Maturity (Investment) Wallet</option>
+                            <option value="bonus">Bonus Income Wallet</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: #cbd5e1; font-weight: 600;">Action</label>
+                    <select name="action" required style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #fff;">
+                        <option value="add">Add Funds (+)</option>
+                        <option value="subtract">Deduct Funds (-)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: #cbd5e1; font-weight: 600;">Amount (USDT)</label>
+                    <input type="number" name="amount" step="0.00000001" min="0.00000001" required placeholder="0.00" style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #fff;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: #cbd5e1; font-weight: 600;">Reason / Internal Note</label>
+                <input type="text" name="reason" required placeholder="e.g., Bonus for early investor, Deposit correction" style="width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; color: #fff;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 15px; align-items: center;">
+                <span style="font-size: 0.8rem; color: #64748b;">⚠️ This action will be permanently recorded in the ledger.</span>
+                <button type="submit" class="button button-primary" style="padding: 12px 24px; font-weight: bold;">Apply Adjustment</button>
+            </div>
+        </form>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userSelect = document.getElementById('adjust_user_id');
+            const form = document.getElementById('manual-adjust-form');
+            
+            userSelect.addEventListener('change', function() {
+                if (this.value) {
+                    const selectedOption = this.options[this.selectedIndex];
+                    form.action = selectedOption.getAttribute('data-url');
+                } else {
+                    form.action = '';
+                }
+            });
+        });
+    </script>
+
 </div></section>
 @endsection

@@ -224,4 +224,38 @@ class AuthController extends Controller
                 && (string) config('services.tron.deposit_address') !== '',
         ]);
     }
+
+    // ==========================================
+    // WALLETS PAGE (NEW FEATURE)
+    // ==========================================
+    public function wallets(Request $request): View
+    {
+        $user = $request->user();
+        
+        $referralAccount = \App\Models\LedgerAccount::where('account_key', 'user:'.$user->id.':referral:USDT')->first();
+        $maturityAccount = \App\Models\LedgerAccount::where('account_key', 'user:'.$user->id.':investment:USDT')->first();
+
+        // LedgerAccount එකේ balance එක ගන්නවා. 
+        // ඔයාගේ Model එකේ balance column එක තියෙනවා නම් ඒක කෙලින්ම ගන්න පුළුවන්.
+        // නැත්නම් අපි එතනම entries වලින් ගණනය කරමු.
+        
+        $referralBalance = 0;
+        if ($referralAccount) {
+            $credits = $referralAccount->entries()->where('direction', 'credit')->sum('amount');
+            $debits = $referralAccount->entries()->where('direction', 'debit')->sum('amount');
+            $referralBalance = $credits - $debits;
+        }
+
+        $maturityBalance = 0;
+        if ($maturityAccount) {
+            $credits = $maturityAccount->entries()->where('direction', 'credit')->sum('amount');
+            $debits = $maturityAccount->entries()->where('direction', 'debit')->sum('amount');
+            $maturityBalance = $credits - $debits;
+        }
+
+        return view('account.wallets', [
+            'referralBalance' => $referralBalance,
+            'maturityBalance' => $maturityBalance,
+        ]);
+    }
 }
