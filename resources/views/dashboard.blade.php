@@ -113,13 +113,38 @@
         </section>
         <div class="notice-card model-preview-notice"><span class="notice-icon">i</span><div><strong>Preview only.</strong><p>This estimate is not a promise of earnings. Deposit review must be configured before a plan can be activated.</p></div></div>
 
-        <section class="dashboard-panel crypto-transfer-panel mockup-account-transfers">
-            <div class="dashboard-panel-heading"><div><div class="eyebrow">Crypto transfers</div><h2>USDT · TRC20</h2></div><span class="status-pill">{{ $depositFlowReady ? 'Deposit review enabled' : 'Not configured' }}</span></div>
-            <p class="dashboard-muted">{{ $depositFlowReady ? 'Deposits are matched against confirmed TRON transfers and reviewed by an administrator before a plan becomes active. Withdrawals are not enabled.' : 'Deposit requests are not enabled yet. Do not send funds until the wallet address and deposit instructions appear with your selected plan.' }}</p>
-            <div class="dashboard-grid"><article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">↓</span><span class="status-pill">{{ $depositFlowReady ? 'Review required' : 'Unavailable' }}</span></div><h2>Deposit</h2><p class="dashboard-muted">{{ $depositFlowReady ? 'Exact plan amount only; transaction hash required.' : 'Deposit address not available.' }}</p><div class="dashboard-detail"><span>Network</span><strong>TRC20</strong></div></article><article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">↑</span><span class="status-pill">Unavailable</span></div><h2>Withdraw</h2><p class="dashboard-muted">Withdrawal requests are not enabled.</p><div class="dashboard-detail"><span>Network</span><strong>TRC20</strong></div></article></div>
+        <!-- New Account Summary Section (Replacing Crypto Transfers & Recent Transactions) -->
+        <section class="dashboard-panel" style="margin-top: 30px;">
+            <div class="dashboard-panel-heading">
+                <div>
+                    <div class="eyebrow">Account Summary</div>
+                    <h2>Quick Links & Status</h2>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <a href="{{ route('account.wallets') }}" style="text-decoration: none; color: inherit;">
+                    <div class="dashboard-card" style="padding: 20px; background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2);">
+                        <h3 style="color: #38bdf8;">Wallet Balance</h3>
+                        <p class="dashboard-muted">Check your total referral income, maturity funds, and bonus.</p>
+                        <strong style="color: #38bdf8;">Go to Wallets →</strong>
+                    </div>
+                </a>
+                <a href="{{ route('account.referrals') }}" style="text-decoration: none; color: inherit;">
+                    <div class="dashboard-card" style="padding: 20px; background: rgba(74, 222, 128, 0.05); border: 1px solid rgba(74, 222, 128, 0.2);">
+                        <h3 style="color: #4ade80;">Referral Network</h3>
+                        <p class="dashboard-muted">Invite friends, view your team, and check commissions.</p>
+                        <strong style="color: #4ade80;">View Referrals →</strong>
+                    </div>
+                </a>
+                <a href="{{ route('account.kyc') }}" style="text-decoration: none; color: inherit;">
+                    <div class="dashboard-card" style="padding: 20px; background: rgba(234, 179, 8, 0.05); border: 1px solid rgba(234, 179, 8, 0.2);">
+                        <h3 style="color: #eab308;">KYC Verification</h3>
+                        <p class="dashboard-muted">Complete your identity verification to unlock withdrawals.</p>
+                        <strong style="color: #eab308;">Check KYC →</strong>
+                    </div>
+                </a>
+            </div>
         </section>
-
-        <section class="dashboard-panel account-activity-panel"><div class="dashboard-panel-heading"><div><div class="eyebrow">Account activity</div><h2>Recent transactions</h2></div><span class="status-pill">Not enabled</span></div><div class="empty-state"><span>↻</span><strong>No transactions to show</strong><p>Transactions will appear here after the audited ledger and transfer services are configured.</p></div></section>
 
         <div class="notice-card"><span class="notice-icon">i</span><div><strong>Deposits require manual verification.</strong><p>The USDT TRC20 wallet address is shared across users. An investment is activated only after its transaction hash, exact amount, sender, and destination are matched to a confirmed TRON transfer and approved by an administrator. This site does not send withdrawals or promise earnings.</p></div></div>
     </div>

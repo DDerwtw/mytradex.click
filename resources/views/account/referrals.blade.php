@@ -54,8 +54,125 @@
             <article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">5</span></div><h2>Level 5</h2><p class="dashboard-metric">{{ number_format($levelCounts[5]) }}</p><div class="dashboard-detail"><span>Commission rate</span><strong>{{ number_format((float) ($levelRates[5] ?? 0), 2) }}%</strong></div><div class="dashboard-detail"><span>Referral income</span><strong>{{ number_format((float) ($levelIncome[5] ?? 0), 2) }} USDT</strong></div><div class="dashboard-detail"><span>Relationship count</span><strong>{{ number_format($levelCounts[5]) }}</strong></div></article>
         </div>
 
+        <!-- Referral Network Tree (NEW) -->
+        <section class="dashboard-panel" style="margin-top: 30px;">
+            <div class="dashboard-panel-heading">
+                <div>
+                    <div class="eyebrow">Your Network</div>
+                    <h2>Referral Tree</h2>
+                </div>
+                <span class="status-pill">{{ array_sum($levelCounts) }} total connections</span>
+            </div>
+            <p class="dashboard-muted">This tree shows the structure of your referral network up to 5 levels deep.</p>
+
+            <div class="referral-tree-container" style="padding: 20px; overflow-x: auto;">
+                @php
+                    $user = auth()->user();
+                    $level1 = $user->referrals()->get();
+                    $level2 = collect();
+                    $level3 = collect();
+                    $level4 = collect();
+                    $level5 = collect();
+
+                    foreach($level1 as $l1) {
+                        $l2 = $l1->referrals()->get();
+                        $level2 = $level2->merge($l2);
+                        foreach($l2 as $l2item) {
+                            $l3 = $l2item->referrals()->get();
+                            $level3 = $level3->merge($l3);
+                            foreach($l3 as $l3item) {
+                                $l4 = $l3item->referrals()->get();
+                                $level4 = $level4->merge($l4);
+                                foreach($l4 as $l4item) {
+                                    $l5 = $l4item->referrals()->get();
+                                    $level5 = $level5->merge($l5);
+                                }
+                            }
+                        }
+                    }
+                @endphp
+
+                <div style="display: flex; flex-direction: column; gap: 30px;">
+                    
+                    <!-- Level 1 -->
+                    <div>
+                        <div class="eyebrow" style="color: #38bdf8;">Level 1 (Direct)</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                            @forelse($level1 as $member)
+                                <div class="tree-node" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 10px; border-radius: 8px; min-width: 150px;">
+                                    <strong style="color: #fff;">{{ $member->name }}</strong>
+                                    <div style="font-size: 0.75rem; color: #94a3b8;">{{ $member->email }}</div>
+                                </div>
+                            @empty
+                                <span class="dashboard-muted">No direct referrals yet.</span>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <!-- Level 2 -->
+                    <div>
+                        <div class="eyebrow" style="color: #4ade80;">Level 2</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                            @forelse($level2 as $member)
+                                <div class="tree-node" style="background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.3); padding: 10px; border-radius: 8px; min-width: 150px;">
+                                    <strong style="color: #fff;">{{ $member->name }}</strong>
+                                    <div style="font-size: 0.75rem; color: #94a3b8;">{{ $member->email }}</div>
+                                </div>
+                            @empty
+                                <span class="dashboard-muted">No Level 2 referrals yet.</span>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <!-- Level 3 -->
+                    <div>
+                        <div class="eyebrow" style="color: #eab308;">Level 3</div>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                            @forelse($level3 as $member)
+                                <div class="tree-node" style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); padding: 10px; border-radius: 8px; min-width: 150px;">
+                                    <strong style="color: #fff;">{{ $member->name }}</strong>
+                                    <div style="font-size: 0.75rem; color: #94a3b8;">{{ $member->email }}</div>
+                                </div>
+                            @empty
+                                <span class="dashboard-muted">No Level 3 referrals yet.</span>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <!-- Level 4 & 5 -->
+                    <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+                        <div>
+                            <div class="eyebrow" style="color: #a855f7;">Level 4</div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                                @forelse($level4 as $member)
+                                    <div class="tree-node" style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); padding: 10px; border-radius: 8px; min-width: 120px;">
+                                        <strong style="color: #fff;">{{ $member->name }}</strong>
+                                    </div>
+                                @empty
+                                    <span class="dashboard-muted">None</span>
+                                @endforelse
+                            </div>
+                        </div>
+                        <div>
+                            <div class="eyebrow" style="color: #ec4899;">Level 5</div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                                @forelse($level5 as $member)
+                                    <div class="tree-node" style="background: rgba(236, 72, 153, 0.1); border: 1px solid rgba(236, 72, 153, 0.3); padding: 10px; border-radius: 8px; min-width: 120px;">
+                                        <strong style="color: #fff;">{{ $member->name }}</strong>
+                                    </div>
+                                @empty
+                                    <span class="dashboard-muted">None</span>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
         <!-- Withdrawal Section (Only Referral) -->
-        <section class="dashboard-panel referral-withdraw-panel">
+        <section class="dashboard-panel referral-withdraw-panel" style="margin-top: 30px;">
             <div class="dashboard-panel-heading" style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; margin-bottom: 20px;">
                 <div>
                     <div class="eyebrow" style="color: #38bdf8;">Referral Income</div>
@@ -83,7 +200,6 @@
 
             <form class="model-save-form referral-withdraw-form" method="POST" action="{{ route('account.referral-withdrawals.store') }}" style="display: flex; flex-direction: column; gap: 20px;">
                 @csrf
-                <!-- Hidden input for type since we removed the selector -->
                 <input type="hidden" name="withdrawal_type" value="referral">
 
                 <div style="max-width: 400px;">
@@ -187,11 +303,10 @@
         }
     });
 
-    // Fee Calculator Logic
     const amountInput = document.getElementById('withdrawal-amount');
     const feeDisplay = document.getElementById('withdrawal-fee');
     const netDisplay = document.getElementById('withdrawal-net');
-    const feeRate = 2.5; // 2.5%
+    const feeRate = 2.5;
 
     if (amountInput) {
         amountInput.addEventListener('input', function() {

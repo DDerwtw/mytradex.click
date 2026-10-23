@@ -1,28 +1,110 @@
 @extends('layouts.app')
 
-@section('title', 'Administrator overview')
+@section('title', 'Admin Dashboard')
 
 @section('content')
 <section class="page-section"><div class="container dashboard-container">
-    <div class="eyebrow">Restricted area</div><h1 class="page-title">Administrator overview</h1><p class="page-lede">Privileged actions require an active, verified administrator account.</p>
-    <div class="draft-banner"><strong>Deposit review:</strong> Claims can be checked against confirmed USDT TRC20 transfers on TRON. Only an administrator's verified approval posts the matching deposit to the ledger and activates that saved plan. Withdrawals are not sent.</div>
-    <div class="dashboard-grid admin-stats">
-        <article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">♙</span></div><h2>Registered users</h2><p class="dashboard-metric">{{ number_format($usersCount) }}</p><div class="dashboard-detail"><span>Source</span><strong>Database</strong></div></article>
-        <article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">✓</span></div><h2>Verified emails</h2><p class="dashboard-metric">{{ number_format($verifiedUsersCount) }}</p><div class="dashboard-detail"><span>Source</span><strong>Database</strong></div></article>
-        <article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">▤</span><span class="status-pill">Review needed</span></div><h2>Pending KYC</h2><p class="dashboard-metric">{{ number_format($pendingKycCount) }}</p><div class="dashboard-detail"><a class="text-link" href="{{ route('admin.kyc.index') }}">Open review queue →</a></div></article>
-        <article class="dashboard-card"><div class="dashboard-card-top"><span class="dashboard-icon">◇</span><span class="status-pill">Disabled</span></div><h2>Financial activity</h2><p class="dashboard-muted">Ledger foundation only; payments and user balances are not enabled.</p><div class="dashboard-detail"><span>Balances</span><strong>Not available</strong></div></article>
+    <div class="dashboard-heading">
+        <div>
+            <div class="eyebrow">Admin Control Panel</div>
+            <h1 class="page-title">Welcome, Administrator</h1>
+            <p class="page-lede">Overview of the platform's activity and pending tasks.</p>
+        </div>
+        <a class="button button-outline" href="{{ route('dashboard') }}">View Site</a>
     </div>
-    <section class="dashboard-panel admin-recent"><div class="dashboard-panel-heading"><div><div class="eyebrow">Referral programme</div><h2>Referral relationships</h2></div><a class="text-link" href="{{ route('admin.referrals.index') }}">Review relationships →</a></div><p class="dashboard-muted">{{ number_format($referralRelationshipsCount) }} relationships recorded. Commission rewards are disabled.</p></section>
-    <section class="dashboard-panel admin-recent"><div class="dashboard-panel-heading"><div><div class="eyebrow">Investment and withdrawal reviews</div><h2>Saved plans</h2></div><a class="text-link" href="{{ route('admin.investments.index') }}">Open saved plans and {{ $pendingWithdrawalCount }} pending withdrawal reviews →</a></div><p class="dashboard-muted">Withdrawal review decisions are recorded for administration only; no funds are sent.</p></section>
-    <section class="dashboard-panel admin-recent"><div class="dashboard-panel-heading"><div><div class="eyebrow">Accounting foundation</div><h2>USDT ledger report</h2></div><a class="text-link" href="{{ route('admin.ledger.index') }}">View journal entries →</a></div><p class="dashboard-muted">The ledger records deposits only after an administrator matches and approves a confirmed TRON transfer.</p></section>
-    <section class="dashboard-panel admin-recent"><div class="dashboard-panel-heading"><div><div class="eyebrow">TRON · USDT TRC20</div><h2>Deposit review queue</h2></div><a class="text-link" href="{{ route('admin.deposits.index') }}">Review {{ $pendingDepositCount }} pending claims and deposit records →</a></div><p class="dashboard-muted">Deposit claims require a matching transaction hash, sender, exact amount, USDT contract, TRC20 network, and destination wallet.</p></section>
-    <section class="dashboard-panel admin-recent"><div class="dashboard-panel-heading"><div><div class="eyebrow">User communications</div><h2>Dashboard messages</h2></div><a class="text-link" href="{{ route('admin.messages.index') }}">Write a user message or action note →</a></div><p class="dashboard-muted">Messages and action updates appear in the selected user's dashboard.</p></section>
-    <section class="dashboard-panel admin-recent"><div class="dashboard-panel-heading"><div><div class="eyebrow">Verification queue</div><h2>Recent applications</h2></div><a class="text-link" href="{{ route('admin.kyc.index') }}">View all →</a></div>
-        @forelse ($latestSubmissions as $item)
-            <a class="admin-list-row" href="{{ route('admin.kyc.show', $item) }}"><span><strong>{{ $item->user->name }}</strong><small>{{ $item->user->email }}</small></span><span class="status-pill">{{ ucfirst($item->status) }}</span></a>
-        @empty
-            <div class="empty-state"><span>✓</span><strong>No verification applications yet</strong><p>Submitted applications will appear here for authorized review.</p></div>
-        @endforelse
-    </section>
+
+    <!-- Stats Overview Row -->
+    <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-top: 30px; margin-bottom: 30px;">
+        <!-- Total Users -->
+        <div class="dashboard-card" style="padding: 20px; border-left: 4px solid #38bdf8;">
+            <div class="eyebrow" style="color: #38bdf8;">Total Users</div>
+            <h2 style="font-size: 2rem; color: #fff; margin: 10px 0;">{{ number_format($usersCount) }}</h2>
+            <div class="dashboard-detail"><span>Verified</span><strong>{{ number_format($verifiedUsersCount) }}</strong></div>
+        </div>
+        
+        <!-- Pending KYC -->
+        <div class="dashboard-card" style="padding: 20px; border-left: 4px solid #eab308;">
+            <div class="eyebrow" style="color: #eab308;">Pending KYC</div>
+            <h2 style="font-size: 2rem; color: #fff; margin: 10px 0;">{{ number_format($pendingKycCount) }}</h2>
+            <div class="dashboard-detail"><span>Action Required</span><a href="{{ route('admin.kyc.index') }}" style="color: #eab308; text-decoration: underline;">Review Now →</a></div>
+        </div>
+
+        <!-- Pending Deposits -->
+        <div class="dashboard-card" style="padding: 20px; border-left: 4px solid #a855f7;">
+            <div class="eyebrow" style="color: #a855f7;">Pending Deposits</div>
+            <h2 style="font-size: 2rem; color: #fff; margin: 10px 0;">{{ number_format($pendingDepositCount) }}</h2>
+            <div class="dashboard-detail"><span>Action Required</span><a href="{{ route('admin.deposits.index') }}" style="color: #a855f7; text-decoration: underline;">Review Now →</a></div>
+        </div>
+
+        <!-- Pending Withdrawals -->
+        <div class="dashboard-card" style="padding: 20px; border-left: 4px solid #4ade80;">
+            <div class="eyebrow" style="color: #4ade80;">Pending Withdrawals</div>
+            <h2 style="font-size: 2rem; color: #fff; margin: 10px 0;">{{ number_format($pendingWithdrawalCount + $pendingMaturityCount) }}</h2>
+            <div class="dashboard-detail"><span>Total (Referral + Maturity)</span></div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+        
+        <!-- Left Column: Quick Actions -->
+        <div>
+            <section class="dashboard-panel">
+                <div class="dashboard-panel-heading"><div><div class="eyebrow">Management</div><h2>Quick Actions</h2></div></div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <a href="{{ route('admin.kyc.index') }}" class="mockup-quick-link" style="text-decoration: none;">
+                        <i style="color: #eab308;">⬡</i>
+                        <span><strong>KYC Verification</strong><small>Review user identities</small></span>
+                        <b>→</b>
+                    </a>
+                    <a href="{{ route('admin.referrals.index') }}" class="mockup-quick-link" style="text-decoration: none;">
+                        <i style="color: #38bdf8;">◎</i>
+                        <span><strong>Referral Management</strong><small>Adjust balances & review withdrawals</small></span>
+                        <b>→</b>
+                    </a>
+                    <a href="{{ route('admin.maturity-withdrawals.index') }}" class="mockup-quick-link" style="text-decoration: none;">
+                        <i style="color: #4ade80;">◇</i>
+                        <span><strong>Maturity Withdrawals</strong><small>Review & approve requests</small></span>
+                        <b>→</b>
+                    </a>
+                    <a href="{{ route('admin.deposits.index') }}" class="mockup-quick-link" style="text-decoration: none;">
+                        <i style="color: #a855f7;">◈</i>
+                        <span><strong>Deposit Claims</strong><small>Verify TRC20 deposits</small></span>
+                        <b>→</b>
+                    </a>
+                    <a href="{{ route('admin.ledger.index') }}" class="mockup-quick-link" style="text-decoration: none;">
+                        <i style="color: #94a3b8;">▤</i>
+                        <span><strong>Financial Ledger</strong><small>View all transactions</small></span>
+                        <b>→</b>
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <!-- Right Column: Recent Activity -->
+        <div>
+            <section class="dashboard-panel">
+                <div class="dashboard-panel-heading"><div><div class="eyebrow">Recent Activity</div><h2>Latest KYC Submissions</h2></div></div>
+                @if ($latestSubmissions->isEmpty())
+                    <div class="empty-state"><strong>No recent submissions</strong><p>New KYC submissions will appear here.</p></div>
+                @else
+                    <div class="referral-table-wrap">
+                        <table class="referral-table">
+                            <thead><tr><th>User</th><th>Submitted</th><th>Action</th></tr></thead>
+                            <tbody>
+                                @foreach ($latestSubmissions as $submission)
+                                    <tr>
+                                        <td>{{ $submission->user->name }}<br><small>{{ $submission->user->email }}</small></td>
+                                        <td>{{ $submission->submitted_at->diffForHumans() }}</td>
+                                        <td><a href="{{ route('admin.kyc.show', $submission) }}" class="text-link">Review →</a></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </section>
+        </div>
+
+    </div>
 </div></section>
 @endsection

@@ -57,8 +57,14 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/investments/{investment}/withdrawal-requests', [InvestmentController::class, 'requestWithdrawal'])->middleware('throttle:5,10')->name('investments.withdrawals.store');
         Route::post('/messages/{message}/read', [AccountMessageController::class, 'markRead'])->middleware('throttle:30,1')->name('messages.read');
         
-        // ⬇️ මෙන්න මේ පේළිය මම එකතු කළා (Wallets Page)
+        // Wallets Page
         Route::get('/wallets', [AuthController::class, 'wallets'])->name('wallets');
+        
+        // Wallet Actions (Withdraw / Invest / Reinvest)
+        Route::post('/wallets/maturity-withdraw', [AuthController::class, 'requestMaturityWithdrawal'])->name('wallets.maturity-withdraw');
+        Route::post('/wallets/maturity-reinvest', [AuthController::class, 'reinvestMaturity'])->name('wallets.maturity-reinvest');
+        Route::post('/wallets/bonus-invest', [AuthController::class, 'investBonus'])->name('wallets.bonus-invest');
+        Route::post('/wallets/referral-reinvest', [AuthController::class, 'reinvestReferral'])->name('wallets.referral-reinvest');
     });
 
     Route::middleware(['verified', 'account.active', 'admin'])->prefix('admin')->name('admin.')->group(function (): void {
@@ -85,6 +91,11 @@ Route::middleware('auth')->group(function (): void {
         Route::get('/kyc/{submission}/attachment/{type}', [AdminController::class, 'kycAttachment'])->name('kyc.attachment');
         Route::post('/kyc/{submission}/decision', [AdminController::class, 'reviewKyc'])->middleware('throttle:20,1')->name('kyc.review');
         Route::post('/kyc/change-requests/{changeRequest}/decision', [KycChangeRequestController::class, 'review'])->middleware('throttle:20,1')->name('kyc.change-requests.review');
+        
+        // Maturity Withdrawals (Admin)
+        Route::get('/maturity-withdrawals', [AdminController::class, 'maturityWithdrawals'])->name('maturity-withdrawals.index');
+        Route::post('/maturity-withdrawals/{withdrawal}/review', [AdminController::class, 'reviewMaturityWithdrawal'])->name('maturity-withdrawals.review');
+        Route::post('/maturity-withdrawals/{withdrawal}/paid', [AdminController::class, 'markMaturityWithdrawalPaid'])->name('maturity-withdrawals.paid');
     });
 });
 
