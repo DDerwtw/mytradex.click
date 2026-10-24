@@ -36,3 +36,17 @@ body{background:radial-gradient(ellipse at 50% -15%,rgba(0,104,255,.16),transpar
 @media(prefers-reduced-motion:reduce){.feature-card,.dashboard-card{transition:none}}
 .market-price-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:30px 0 12px}.market-price-heading>div{display:grid;gap:4px}.market-price-heading>div>span{color:#92a9bc;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase}.market-price-heading>div>span small{margin-left:7px;color:#71889b;font-size:9px;font-weight:500;letter-spacing:0;text-transform:none}.market-price-heading>div>strong{font-family:var(--font-display);font-size:25px;line-height:1.2;letter-spacing:-.6px;color:#f1f7ff}.market-change{padding:6px 9px;border:1px solid rgba(39,224,203,.2);border-radius:7px;background:rgba(39,224,203,.07);color:#43e2cf;font-size:11px;font-weight:700;white-space:nowrap}.market-change small{color:#92a9bc;font-size:9px;font-weight:500}.market-change.is-down{border-color:rgba(255,117,139,.22);background:rgba(255,117,139,.07);color:#ff8a9e}.market-chart-wrap{position:relative;overflow:hidden;margin:0 -7px;padding:7px 5px 0;border-radius:9px;background:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,rgba(116,159,190,.09) 28px,transparent 29px)}.market-chart{display:block;width:100%;height:116px;overflow:visible;filter:drop-shadow(0 0 7px rgba(39,224,203,.3))}.chart-time-labels{display:flex;justify-content:space-between;padding:0 3px 2px;color:#71889b;font-size:9px}.market-chart-unavailable{display:grid;min-height:124px;place-items:center;border:1px dashed rgba(116,159,190,.2);border-radius:9px;color:#91a5b4;font-size:11px}.market-symbol{margin-left:5px;color:#71889b;font-size:9px}.hero-panel .market-price-heading+ .panel-divider{margin-top:12px}
 .kyc-change-row{align-items:flex-start}.kyc-change-row .model-review-form{align-items:center}.kyc-document-links{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}.kyc-document-links .button{margin-top:0!important}@media(max-width:760px){.kyc-change-row{flex-direction:column}.kyc-change-row .model-review-form{width:100%;min-width:0}.kyc-change-row .model-review-form input{flex:1;max-width:none}}
+/* Live Trading Chart Container */
+.live-chart-container {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.live-chart-container:hover {
+    transform: translateY(-2px);
+}
+
+/* Fix TradingView dark mode background to match our site */
+.tradingview-widget-container iframe {
+    border-radius: 0 0 16px 16px;
+}

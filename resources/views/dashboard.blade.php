@@ -52,7 +52,78 @@
                 </article>
             </a>
 
+            <!-- Daily Interest Card (New) -->
+            <article class="dashboard-card" style="border-left: 4px solid #eab308;">
+                <div class="dashboard-card-top">
+                    <span class="dashboard-icon" style="color: #eab308;">%</span>
+                    <span class="status-pill" style="background: rgba(234, 179, 8, 0.1); color: #eab308; border: 1px solid rgba(234, 179, 8, 0.2);">Accruing</span>
+                </div>
+                <h2>Daily Interest</h2>
+                <p class="mockup-stat-value" style="color: #eab308;">{{ number_format($totalDailyInterest, 2) }} <small style="font-size: 0.8rem;">USDT</small></p>
+                <div class="dashboard-detail">
+                    <span>Today's Earned</span>
+                    <strong style="color: #4ade80;">+{{ number_format($todayInterest, 2) }} USDT</strong>
+                </div>
+            </article>
+
         </div>
+
+        <!-- Growth Charts Section -->
+        <section class="dashboard-panel" style="margin-top: 30px;">
+            <div class="dashboard-panel-heading">
+                <div>
+                    <div class="eyebrow">Performance</div>
+                    <h2>Income Growth</h2>
+                </div>
+                <span class="status-pill">Last 7 Days</span>
+            </div>
+            <p class="dashboard-muted">Track your daily interest and referral income growth over the past week.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 20px;">
+                
+                <!-- Interest Growth Chart -->
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(234, 179, 8, 0.2);">
+                    <h3 style="color: #eab308; font-size: 1rem; margin-bottom: 15px;">Interest Income</h3>
+                    <canvas id="interestChart" height="200"></canvas>
+                </div>
+
+                <!-- Referral Growth Chart -->
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.2);">
+                    <h3 style="color: #38bdf8; font-size: 1rem; margin-bottom: 15px;">Referral Income</h3>
+                    <canvas id="referralChart" height="200"></canvas>
+                </div>
+
+            </div>
+
+            <!-- Data Table Below Charts -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 20px;">
+                <!-- Interest Data Table -->
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(234, 179, 8, 0.2);">
+                    <h3 style="color: #eab308; font-size: 1rem; margin-bottom: 15px;">Interest Income Details</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        @foreach($chartLabels as $index => $label)
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <span style="color: #cbd5e1; font-size: 0.9rem;">{{ $label }}</span>
+                                <strong style="color: #eab308;">{{ number_format($interestChartData[$index], 2) }} USDT</strong>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <!-- Referral Data Table -->
+                <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.2);">
+                    <h3 style="color: #38bdf8; font-size: 1rem; margin-bottom: 15px;">Referral Income Details</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        @foreach($chartLabels as $index => $label)
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <span style="color: #cbd5e1; font-size: 0.9rem;">{{ $label }}</span>
+                                <strong style="color: #38bdf8;">{{ number_format($referralChartData[$index], 2) }} USDT</strong>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <div class="mockup-account-main">
             <section class="dashboard-panel mockup-account-profile">
@@ -153,6 +224,7 @@
 
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.querySelectorAll('.deposit-qr-code[data-wallet-address]').forEach((element) => {
     const address = element.dataset.walletAddress;
@@ -161,6 +233,62 @@ document.querySelectorAll('.deposit-qr-code[data-wallet-address]').forEach((elem
     } else {
         element.textContent = 'QR unavailable';
     }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const labels = @json($chartLabels ?? []);
+    
+    // Interest Chart
+    const ctxInterest = document.getElementById('interestChart').getContext('2d');
+    new Chart(ctxInterest, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Interest (USDT)',
+                data: @json($interestChartData ?? []),
+                borderColor: '#eab308',
+                backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            }
+        }
+    });
+
+    // Referral Chart
+    const ctxReferral = document.getElementById('referralChart').getContext('2d');
+    new Chart(ctxReferral, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Referral (USDT)',
+                data: @json($referralChartData ?? []),
+                borderColor: '#38bdf8',
+                backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            }
+        }
+    });
 });
 </script>
 @endpush

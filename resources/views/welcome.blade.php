@@ -44,27 +44,101 @@
             <div class="mockup-arrow">↗</div>
         </div>
 
-        <aside class="mockup-side-stack">
-            <section class="mockup-side-card why-card">
-                <h2>Why choose MyTradeX?</h2>
-                <div class="why-item"><span class="why-icon green">▥</span><div><strong>Useful market context</strong><p>Prices from CoinGecko. Informational only.</p></div></div>
-                <div class="why-item"><span class="why-icon blue">◇</span><div><strong>Account tools</strong><p>Email verification and private account access.</p></div></div>
-                <div class="why-item"><span class="why-icon purple">⬡</span><div><strong>Identity review</strong><p>Private document storage with administrator review.</p></div></div>
-                <div class="why-item"><span class="why-icon orange">◎</span><div><strong>Referral tracking</strong><p>Configured commissions accrue only after a referred deposit is approved.</p></div></div>
-            </section>
-            <section class="mockup-side-card market-mini-card">
-                <div class="mockup-card-heading"><h2>Market overview</h2><span class="mockup-live-badge {{ $markets ? 'is-live' : '' }}">{{ $markets ? '● LIVE DATA' : 'UNAVAILABLE' }}</span></div>
-                @if ($markets)
-                    <div class="mockup-market-head"><span>Asset</span><span>Price (USD)</span><span>24h</span></div>
-                    @foreach ($markets as $market)
-                        <div class="mockup-market-row"><span><i class="asset-dot asset-{{ strtolower($market['symbol']) }}">{{ strtoupper(substr($market['symbol'], 0, 1)) }}</i>{{ $market['name'] }}</span><strong>${{ number_format($market['current_price'], 2) }}</strong><b class="{{ ($market['price_change_percentage_24h'] ?? 0) < 0 ? 'negative' : 'positive' }}">{{ is_numeric($market['price_change_percentage_24h'] ?? null) ? number_format($market['price_change_percentage_24h'], 2).'%' : '—' }}</b></div>
-                    @endforeach
-                    <a class="mockup-table-link" href="{{ route('markets') }}">Open full market view →</a>
-                @else
-                    <div class="mockup-market-empty">No market prices are available right now.</div>
-                @endif
-            </section>
-        </aside>
+        <!-- Mini Market Ticker Section -->
+        <div class="mini-market-ticker" style="background: #0b1120; border-radius: 16px; border: 1px solid rgba(56, 189, 248, 0.2); padding: 20px; display: flex; flex-direction: column; height: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <div class="eyebrow" style="color: #38bdf8;">Market Overview</div>
+                    <h2 style="color: #fff; font-size: 1.2rem; margin: 5px 0 0 0;">Live Prices</h2>
+                </div>
+                <span class="status-pill" style="background: rgba(74, 222, 128, 0.1); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.2);">● LIVE</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Bitcoin -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem; color: #f59e0b;">₿</span>
+                        <div>
+                            <strong style="color: #fff; display: block;">Bitcoin</strong>
+                            <small style="color: #64748b;">BTC/USDT</small>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong style="color: #fff; display: block;">$80,715.61</strong>
+                        <small style="color: #f87171;">-1.24%</small>
+                    </div>
+                </div>
+
+                <!-- Ethereum -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem; color: #818cf8;">◇</span>
+                        <div>
+                            <strong style="color: #fff; display: block;">Ethereum</strong>
+                            <small style="color: #64748b;">ETH/USDT</small>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong style="color: #fff; display: block;">$2,375.55</strong>
+                        <small style="color: #f87171;">-1.11%</small>
+                    </div>
+                </div>
+
+                <!-- Solana -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.5rem; color: #a855f7;">◎</span>
+                        <div>
+                            <strong style="color: #fff; display: block;">Solana</strong>
+                            <small style="color: #64748b;">SOL/USDT</small>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong style="color: #fff; display: block;">$102.18</strong>
+                        <small style="color: #f87171;">-2.14%</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: auto; padding-top: 20px;">
+                <a href="{{ route('markets') }}" class="button button-outline" style="width: 100%; text-align: center; font-size: 0.9rem;">View All Markets →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works-section" style="margin-top: 40px; margin-bottom: 40px;">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div class="eyebrow" style="color: #38bdf8; justify-content: center;">Simple Process</div>
+            <h2 style="font-size: 2rem; color: #fff; margin: 10px 0;">How MyTradeX Works</h2>
+            <p style="color: #94a3b8; max-width: 600px; margin: 0 auto;">Start your digital asset journey in three simple steps. No hidden fees, transparent process.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+            
+            <!-- Step 1 -->
+            <div class="dashboard-card" style="padding: 30px; text-align: center; background: linear-gradient(180deg, rgba(56, 189, 248, 0.05) 0%, rgba(11, 17, 32, 0) 100%); border-top: 4px solid #38bdf8;">
+                <div style="width: 60px; height: 60px; background: rgba(56, 189, 248, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 1.5rem; color: #38bdf8; font-weight: bold;">01</div>
+                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Create an Account</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Sign up in minutes. Verify your email address to secure your account and access the dashboard.</p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="dashboard-card" style="padding: 30px; text-align: center; background: linear-gradient(180deg, rgba(234, 179, 8, 0.05) 0%, rgba(11, 17, 32, 0) 100%); border-top: 4px solid #eab308;">
+                <div style="width: 60px; height: 60px; background: rgba(234, 179, 8, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 1.5rem; color: #eab308; font-weight: bold;">02</div>
+                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Verify Identity (KYC)</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Complete a quick identity verification. Your documents are stored securely and reviewed by our team.</p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="dashboard-card" style="padding: 30px; text-align: center; background: linear-gradient(180deg, rgba(74, 222, 128, 0.05) 0%, rgba(11, 17, 32, 0) 100%); border-top: 4px solid #4ade80;">
+                <div style="width: 60px; height: 60px; background: rgba(74, 222, 128, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; font-size: 1.5rem; color: #4ade80; font-weight: bold;">03</div>
+                <h3 style="color: #fff; font-size: 1.2rem; margin-bottom: 10px;">Start Investing</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">Deposit USDT, choose a package, and track your earnings. Withdraw or reinvest your profits easily.</p>
+            </div>
+
+        </div>
     </section>
 
     <section class="mockup-platform-section" id="packages">
@@ -83,30 +157,120 @@
         <div class="mockup-info-strip"><div><i>◈</i><span><strong>Market information</strong><small>Prices may be delayed and are not a trading feature.</small></span></div><div><i>⬡</i><span><strong>Account security</strong><small>Verified access and private document storage.</small></span></div><div><i>▣</i><span><strong>USDT · TRC20</strong><small>Transfer preview only. No funds are handled.</small></span></div><div><i>!</i><span><strong>Important</strong><small>No returns, balances, or rewards are promised.</small></span></div></div>
     </section>
 
-    <section class="mockup-bottom-layout" id="how-it-works">
-        <div class="mockup-dashboard-preview">
-            <div class="mockup-bottom-title"><h2>MyTradeX account preview</h2><a href="{{ route('login') }}">Open account →</a></div>
-            <div class="mockup-dashboard-inner">
-                <aside class="mockup-dash-nav"><strong><span>▥</span> mytradex.click</strong><a class="active" href="{{ route('login') }}">▦ &nbsp; Dashboard</a><a href="{{ route('markets') }}">◈ &nbsp; Market data</a><a href="{{ route('login') }}">◉ &nbsp; Verification</a><a href="{{ route('login') }}">↗ &nbsp; Referral links</a><a href="{{ route('login') }}">◇ &nbsp; USDT transfer preview</a><a href="{{ route('legal.risk') }}">⚙ &nbsp; Profile &amp; security</a></aside>
-                <div class="mockup-dash-content">
-                    <div class="mockup-dash-top"><strong>Account overview</strong><span>Private account · Sign in required</span></div>
-                    <div class="mockup-metrics"><article><i class="tone-blue">◈</i><small>Market feed</small><strong>{{ $markets ? 'Available' : 'Unavailable' }}</strong></article><article><i class="tone-teal">◎</i><small>Account access</small><strong>Sign in</strong></article><article><i class="tone-purple">◇</i><small>Referral commissions</small><strong>Deposit based</strong></article><article><i class="tone-gold">▣</i><small>Wallet balances</small><strong>Unavailable</strong></article></div>
-                    <div class="mockup-dash-panels"><section><div class="mockup-dash-panel-title"><strong>Market trend</strong><a href="{{ route('markets') }}">View markets →</a></div>
-                        @if (count($chartValues) > 1)
-                            <svg class="mockup-dashboard-chart" viewBox="0 0 420 132" role="img" aria-label="{{ $featuredMarket['name'] }} seven-day price trend"><defs><linearGradient id="dashboard-chart-fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#0d9cff" stop-opacity=".3"/><stop offset="100%" stop-color="#0d9cff" stop-opacity="0"/></linearGradient></defs><path d="{{ $chartArea }}" fill="url(#dashboard-chart-fill)"/><polyline points="{{ implode(' ', $chartPoints) }}" fill="none" stroke="#12c9f4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                        @else
-                            <div class="mockup-chart-empty">Market chart will appear when data is available.</div>
-                        @endif
-                    </section><section><div class="mockup-dash-panel-title"><strong>Account setup</strong><span class="mockup-outline-label">IN PROGRESS</span></div><div class="mockup-progress"><i>01</i><span><strong>Create account</strong><small>Email verification required</small></span></div><div class="mockup-progress"><i>02</i><span><strong>Verify identity</strong><small>Private review process</small></span></div><div class="mockup-progress"><i>03</i><span><strong>Explore the platform</strong><small>Financial services disabled</small></span></div></section></div>
+    <!-- New Account Preview & Referral Section -->
+    <section class="mockup-bottom-layout" id="how-it-works" style="display: flex; flex-direction: column; gap: 30px; margin-top: 50px;">
+        
+        <!-- Account Preview (Full Width) -->
+        <div class="dashboard-panel" style="padding: 0; overflow: hidden;">
+            <div style="padding: 20px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div class="eyebrow" style="color: #38bdf8;">Account Dashboard</div>
+                    <h2 style="font-size: 1.5rem; color: #fff; margin: 5px 0 0 0;">MyTradeX Preview</h2>
+                </div>
+                <a href="{{ route('login') }}" class="button button-outline" style="padding: 8px 15px; font-size: 0.9rem;">Open Account →</a>
+            </div>
+            
+            <div style="padding: 25px;">
+                <div class="mockup-metrics" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+                    <article style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="tone-blue" style="font-size: 1.8rem;">◈</i>
+                            <small style="color: #94a3b8; font-size: 0.95rem; font-weight: 500;">Market feed</small>
+                        </div>
+                        <strong style="color: #38bdf8; font-size: 1.2rem;">{{ $markets ? 'Available' : 'Unavailable' }}</strong>
+                    </article>
+                    
+                    <article style="background: rgba(74, 222, 128, 0.05); border: 1px solid rgba(74, 222, 128, 0.2); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="tone-teal" style="font-size: 1.8rem;">◎</i>
+                            <small style="color: #94a3b8; font-size: 0.95rem; font-weight: 500;">Account access</small>
+                        </div>
+                        <strong style="color: #4ade80; font-size: 1.2rem;">Secure Sign in</strong>
+                    </article>
+                    
+                    <article style="background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.2); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="tone-purple" style="font-size: 1.8rem;">◇</i>
+                            <small style="color: #94a3b8; font-size: 0.95rem; font-weight: 500;">Referral commissions</small>
+                        </div>
+                        <strong style="color: #a855f7; font-size: 1.2rem;">Deposit based</strong>
+                    </article>
+                    
+                    <article style="background: rgba(234, 179, 8, 0.05); border: 1px solid rgba(234, 179, 8, 0.2); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="tone-gold" style="font-size: 1.8rem;">▣</i>
+                            <small style="color: #94a3b8; font-size: 0.95rem; font-weight: 500;">Wallet balances</small>
+                        </div>
+                        <strong style="color: #eab308; font-size: 1.2rem;">Available on login</strong>
+                    </article>
                 </div>
             </div>
         </div>
 
-        <aside class="mockup-bottom-aside" id="referrals">
-            <section class="mockup-side-card referral-structure"><h2>Referral programme</h2><div class="mockup-level"><i>1</i><strong>Direct referrals</strong><span>10%</span></div><div class="mockup-level"><i>2</i><strong>Direct invitees’ referrals</strong><span>5%</span></div><div class="mockup-level"><i>3</i><strong>Third level</strong><span>3%</span></div><div class="mockup-level"><i>4</i><strong>Fourth level</strong><span>2%</span></div><div class="mockup-level"><i>5</i><strong>Fifth level</strong><span>1%</span></div><div class="mockup-safe-note">Commission is calculated from approved deposits. Referral payouts are reviewed manually; no automatic transfer is made.</div><a class="mockup-table-link" href="{{ route('login') }}">Sign in to view referrals →</a></section>
-            <section class="mockup-side-card wallet-overview"><h2>Wallet overview</h2><div class="mockup-wallet-grid"><div><i class="tone-blue">▣</i><span>Account balance<strong>Not available</strong></span></div><div><i class="tone-teal">↗</i><span>Market data<strong>{{ $markets ? 'Available' : 'Unavailable' }}</strong></span></div><div><i class="tone-purple">◎</i><span>Referral income<strong>Disabled</strong></span></div><div><i class="tone-gold">⇄</i><span>USDT transfer<strong>Preview only</strong></span></div></div></section>
-            <section class="mockup-cta-card"><div class="mockup-cta-icon">⬡</div><h2>Explore with clarity.</h2><p>Understand the features and risks before creating an account.</p><a href="{{ route('register') }}">Create account <span>→</span></a></section>
-        </aside>
+        <!-- Referral & Wallet & CTA (Grid) -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+            
+            <!-- Referral Programme -->
+            <div class="dashboard-panel" style="padding: 25px;">
+                <div class="eyebrow" style="color: #a855f7;">Earnings</div>
+                <h3 style="font-size: 1.3rem; color: #fff; margin: 5px 0 20px 0;">Referral Programme</h3>
+                <div class="mockup-level" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px;">
+                    <span style="color: #cbd5e1;"><i style="background: #38bdf8; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 8px;">1</i> Direct referrals</span>
+                    <strong style="color: #38bdf8;">10%</strong>
+                </div>
+                <div class="mockup-level" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px;">
+                    <span style="color: #cbd5e1;"><i style="background: #4ade80; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 8px;">2</i> Level 2</span>
+                    <strong style="color: #4ade80;">5%</strong>
+                </div>
+                <div class="mockup-level" style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px;">
+                    <span style="color: #cbd5e1;"><i style="background: #eab308; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 8px;">3</i> Level 3</span>
+                    <strong style="color: #eab308;">3%</strong>
+                </div>
+                <div class="mockup-level" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <span style="color: #cbd5e1;"><i style="background: #a855f7; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 8px;">4</i> Level 4 & 5</span>
+                    <strong style="color: #a855f7;">2% & 1%</strong>
+                </div>
+                <a href="{{ route('login') }}" class="button button-outline" style="width: 100%; text-align: center; font-size: 0.9rem;">View Referrals →</a>
+            </div>
+
+            <!-- Wallet Overview -->
+            <div class="dashboard-panel" style="padding: 25px;">
+                <div class="eyebrow" style="color: #38bdf8;">Balances</div>
+                <h3 style="font-size: 1.3rem; color: #fff; margin: 5px 0 20px 0;">Wallet Overview</h3>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="tone-blue" style="background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 8px; font-size: 1.2rem;">▣</i>
+                        <div>
+                            <small style="color: #94a3b8; display: block;">Account balance</small>
+                            <strong style="color: #38bdf8;">Secure Login Required</strong>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="tone-teal" style="background: rgba(74, 222, 128, 0.1); padding: 10px; border-radius: 8px; font-size: 1.2rem;">↗</i>
+                        <div>
+                            <small style="color: #94a3b8; display: block;">Market data</small>
+                            <strong style="color: #4ade80;">{{ $markets ? 'Available' : 'Unavailable' }}</strong>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="tone-purple" style="background: rgba(168, 85, 247, 0.1); padding: 10px; border-radius: 8px; font-size: 1.2rem;">◎</i>
+                        <div>
+                            <small style="color: #94a3b8; display: block;">Referral income</small>
+                            <strong style="color: #a855f7;">Tracked on Dashboard</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Card -->
+            <div class="dashboard-panel" style="padding: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, rgba(2, 132, 199, 0.1) 0%, rgba(2, 132, 199, 0.02) 100%); border: 1px solid rgba(56, 189, 248, 0.3);">
+                <div class="mockup-cta-icon" style="font-size: 3rem; color: #38bdf8; margin-bottom: 15px;">⬡</div>
+                <h3 style="font-size: 1.5rem; color: #fff; margin-bottom: 10px;">Explore with clarity.</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">Understand the features and risks before creating an account.</p>
+                <a href="{{ route('register') }}" class="button button-primary" style="width: 100%; padding: 12px; font-size: 1rem;">Create Account →</a>
+            </div>
+
+        </div>
     </section>
 
     <section class="mockup-faq-row" id="faq"><div><strong>Does MyTradeX place trades?</strong><span>No. Market information is for reference only.</span></div><div><strong>Can I deposit or withdraw USDT?</strong><span>Deposits are verified manually. Withdrawals require administrator review; this app does not send transfers automatically.</span></div><div><strong>Are referral commissions available?</strong><span>Configured commissions accrue after an administrator approves a referred member’s deposit. Withdrawals are reviewed manually.</span></div></section>

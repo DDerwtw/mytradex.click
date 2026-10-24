@@ -208,6 +208,32 @@ class AuthController extends Controller
         $user = $request->user();
         $kycSubmission = $user->kycSubmissions()->latest('id')->first();
 
+        // අලුත් Daily Interest ගණනය කිරීම්
+        $totalDailyInterest = \App\Models\DailyInterestAccrual::where('user_id', $user->id)->sum('amount_usdt');
+        $todayInterest = \App\Models\DailyInterestAccrual::where('user_id', $user->id)->where('accrued_date', now()->toDateString())->sum('amount_usdt');
+
+        // පසුගිය දින 7 ට අදාළ Interest Income
+        $interestChartData = [];
+        $referralChartData = [];
+        $chartLabels = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $chartLabels[] = $date->format('M j'); // උදා: Oct 23
+
+            // එදිනට අදාළ Interest Income එක
+            $dailyInterest = \App\Models\DailyInterestAccrual::where('user_id', $user->id)
+                ->whereDate('accrued_date', $date)
+                ->sum('amount_usdt');
+            $interestChartData[] = (float) $dailyInterest;
+
+            // එදිනට අදාළ Referral Income එක
+            $dailyReferral = \App\Models\ReferralCommission::where('user_id', $user->id)
+                ->whereDate('created_at', $date)
+                ->sum('amount_usdt');
+            $referralChartData[] = (float) $dailyReferral;
+        }
+
         return view('dashboard', [
             'kycSubmission' => $kycSubmission,
             'kycVerified' => $kycSubmission?->status === 'approved',
@@ -222,6 +248,11 @@ class AuthController extends Controller
                 && (bool) config('services.tron.deposit_sync_enabled')
                 && (string) config('services.tron.api_key') !== ''
                 && (string) config('services.tron.deposit_address') !== '',
+            'totalDailyInterest' => $totalDailyInterest,
+            'todayInterest' => $todayInterest,
+            'chartLabels' => $chartLabels,
+            'interestChartData' => $interestChartData,
+            'referralChartData' => $referralChartData,
         ]);
     }
 

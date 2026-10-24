@@ -201,7 +201,6 @@ class InvestmentController extends Controller
                     'title' => 'Deposit review update',
                     'body' => 'Your deposit claim for the '.$investment->package_name.' plan was not approved. Review note: '.trim($validated['review_note']),
                 ]);
-
                 return;
             }
 
@@ -265,6 +264,20 @@ class InvestmentController extends Controller
                 'title' => 'Deposit verified; plan activated',
                 'body' => 'Your '.$investment->package_name.' plan deposit was verified. The selected period ends on '.$investment->matures_at->format('M j, Y').'. Administrator note: '.trim($validated['review_note']),
             ]);
+
+            // Send Email to User
+            try {
+                \Illuminate\Support\Facades\Mail::to($lockedClaim->user->email)->send(
+                    new \App\Mail\AccountNotification(
+                        'Deposit Approved',
+                        'Great news! Your deposit of ' . $lockedClaim->amount_usdt . ' USDT has been approved and your investment is now active.',
+                        $lockedClaim->user->name
+                    )
+                );
+            } catch (\Exception $e) {
+                // Email යැවීමේදී ප්‍රශ්නයක් ආවත්, අනිත් දේවල් වැඩ කරන්න ඕන නිසා
+                \Log::error('Email sending failed: ' . $e->getMessage());
+            }
         });
 
         return redirect()->route('admin.deposits.index')->with('status', 'Deposit review decision recorded. Approved deposits are posted once to the USDT ledger and start the selected preview period.');
